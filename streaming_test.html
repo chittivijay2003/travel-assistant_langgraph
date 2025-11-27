@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Assistant - Streaming Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .status-bar {
+            background: #f8f9fa;
+            padding: 15px 30px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.disconnected {
+            background: #dc3545;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .output-section {
+            margin-top: 30px;
+        }
+
+        .output-box {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 200px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .streaming-indicator {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .streaming-indicator.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .metric-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .sample-queries {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e7f3ff;
+            border-radius: 8px;
+        }
+
+        .sample-queries h3 {
+            color: #0066cc;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .sample-query {
+            background: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 13px;
+        }
+
+        .sample-query:hover {
+            background: #f0f8ff;
+        }
+
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            color: #155724;
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌍 Travel Assistant</h1>
+            <p>Real-time Streaming Test Interface</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Server: Checking...</span>
+            </div>
+            <div id="serverInfo"></div>
+        </div>
+
+        <div class="content">
+            <div class="input-section">
+                <div class="input-group">
+                    <label for="queryInput">Enter your travel query:</label>
+                    <textarea 
+                        id="queryInput" 
+                        placeholder="Example: Plan a 3-day trip to Tokyo from Singapore. Search flights, get weather forecast, and find top attractions."
+                    >Plan a 3-day trip to Tokyo from Singapore. Search flights, check weather, and find attractions.</textarea>
+                </div>
+
+                <div class="input-group checkbox-group">
+                    <input type="checkbox" id="streamCheckbox" checked>
+                    <label for="streamCheckbox" style="margin-bottom: 0;">Enable Streaming</label>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" id="sendBtn">
+                        🚀 Send Request
+                    </button>
+                    <button class="btn-secondary" id="clearBtn">
+                        🗑️ Clear Output
+                    </button>
+                </div>
+
+                <div class="sample-queries">
+                    <h3>📝 Sample Queries (Click to use):</h3>
+                    <div class="sample-query" data-query="Plan a 3-day trip to Tokyo from Singapore. Search flights, get weather, and find attractions.">
+                        🗾 Tokyo trip planning with all tools
+                    </div>
+                    <div class="sample-query" data-query="I want to visit Paris next month. Can you search for flights from New York and tell me about the weather?">
+                        🗼 Paris vacation planning
+                    </div>
+                    <div class="sample-query" data-query="Find me flights to London, check the weather forecast, and suggest top tourist attractions.">
+                        🇬🇧 London travel package
+                    </div>
+                </div>
+            </div>
+
+            <div class="streaming-indicator" id="streamingIndicator">
+                <div class="spinner"></div>
+                <span>Streaming response...</span>
+            </div>
+
+            <div class="output-section">
+                <label>Response:</label>
+                <div class="output-box" id="outputBox">
+                    <span style="color: #6c757d;">Output will appear here...</span>
+                </div>
+            </div>
+
+            <div class="metrics">
+                <div class="metric-card">
+                    <div class="metric-value" id="charCount">0</div>
+                    <div class="metric-label">Characters</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="chunkCount">0</div>
+                    <div class="metric-label">Chunks</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="duration">0s</div>
+                    <div class="metric-label">Duration</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        const outputBox = document.getElementById('outputBox');
+        const queryInput = document.getElementById('queryInput');
+        const streamCheckbox = document.getElementById('streamCheckbox');
+        const sendBtn = document.getElementById('sendBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const streamingIndicator = document.getElementById('streamingIndicator');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const serverInfo = document.getElementById('serverInfo');
+
+        let charCount = 0;
+        let chunkCount = 0;
+        let startTime = 0;
+
+        // Check server health on load
+        async function checkServerHealth() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                
+                statusDot.classList.remove('disconnected');
+                statusText.textContent = 'Server: Connected ✓';
+                serverInfo.textContent = `Model: ${data.model}`;
+            } catch (error) {
+                statusDot.classList.add('disconnected');
+                statusText.textContent = 'Server: Disconnected ✗';
+                serverInfo.textContent = 'Check if server is running';
+            }
+        }
+
+        // Send request
+        async function sendRequest() {
+            const query = queryInput.value.trim();
+            if (!query) {
+                alert('Please enter a query!');
+                return;
+            }
+
+            const stream = streamCheckbox.checked;
+
+            // Reset metrics
+            charCount = 0;
+            chunkCount = 0;
+            startTime = Date.now();
+
+            // Clear output
+            outputBox.textContent = '';
+            updateMetrics();
+
+            // Disable button
+            sendBtn.disabled = true;
+            sendBtn.textContent = '⏳ Processing...';
+
+            if (stream) {
+                streamingIndicator.classList.add('active');
+                await streamRequest(query);
+            } else {
+                await regularRequest(query);
+            }
+
+            // Re-enable button
+            sendBtn.disabled = false;
+            sendBtn.textContent = '🚀 Send Request';
+            streamingIndicator.classList.remove('active');
+        }
+
+        // Streaming request
+        async function streamRequest(query) {
+            try {
+                const response = await fetch(`${API_URL}/travel-assistant`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        stream: true
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            
+                            if (data === '[DONE]') {
+                                appendToOutput('\n\n✅ Stream complete!');
+                                return;
+                            }
+
+                            try {
+                                const parsed = JSON.parse(data);
+                                if (parsed.content) {
+                                    appendToOutput(parsed.content);
+                                    chunkCount++;
+                                    charCount += parsed.content.length;
+                                    updateMetrics();
+                                }
+                                if (parsed.error) {
+                                    appendToOutput(`\n❌ Error: ${parsed.error}`);
+                                }
+                            } catch (e) {
+                                // Ignore JSON parse errors
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                appendToOutput(`\n❌ Error: ${error.message}`);
+                console.error('Streaming error:', error);
+            }
+        }
+
+        // Regular request
+        async function regularRequest(query) {
+            try {
+                const response = await fetch(`${API_URL}/travel-assistant`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        stream: false
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    outputBox.textContent = data.response;
+                    charCount = data.response.length;
+                    chunkCount = 1;
+                } else {
+                    outputBox.textContent = `Error: ${data.error || 'Unknown error'}`;
+                }
+
+                updateMetrics();
+            } catch (error) {
+                outputBox.textContent = `Error: ${error.message}`;
+                console.error('Request error:', error);
+            }
+        }
+
+        // Append to output
+        function appendToOutput(text) {
+            outputBox.textContent += text;
+            outputBox.scrollTop = outputBox.scrollHeight;
+        }
+
+        // Update metrics
+        function updateMetrics() {
+            document.getElementById('charCount').textContent = charCount;
+            document.getElementById('chunkCount').textContent = chunkCount;
+            
+            const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+            document.getElementById('duration').textContent = `${duration}s`;
+        }
+
+        // Clear output
+        function clearOutput() {
+            outputBox.innerHTML = '<span style="color: #6c757d;">Output will appear here...</span>';
+            charCount = 0;
+            chunkCount = 0;
+            updateMetrics();
+        }
+
+        // Sample query click handlers
+        document.querySelectorAll('.sample-query').forEach(element => {
+            element.addEventListener('click', () => {
+                queryInput.value = element.getAttribute('data-query');
+            });
+        });
+
+        // Event listeners
+        sendBtn.addEventListener('click', sendRequest);
+        clearBtn.addEventListener('click', clearOutput);
+
+        // Allow Enter to send (with Shift+Enter for new line)
+        queryInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendRequest();
+            }
+        });
+
+        // Check server health on load
+        checkServerHealth();
+
+        // Periodic health check
+        setInterval(checkServerHealth, 30000); // Every 30 seconds
+    </script>
+</body>
+</html>
