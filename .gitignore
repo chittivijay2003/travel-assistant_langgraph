@@ -30,6 +30,15 @@ env/
 travel_assistant.log*
 logs/
 
+# Test artifacts
+test_output.log
+output.txt
+
+# Dependency locks
+uv.lock
+poetry.lock
+Pipfile.lock
+
 # Testing
 .pytest_cache/
 .coverage
